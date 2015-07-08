@@ -181,10 +181,13 @@ module.exports = function (grunt) {
     karma: {
       options: {
         frameworks: ['jasmine'],
+        preprocessors: {
+          '**/*.html': 'ng-html2js'
+        },
         files: [  //this files data is also updated in the watch handler, if updated change there too
           '<%%= dom_munger.data.appjs %>',
           'bower_components/angular-mocks/angular-mocks.js',
-          createFolderGlobs('*-spec.js')
+          createFolderGlobs(['*-spec.js', '*.html']),
         ],
         logLevel:'ERROR',
         reporters:['mocha'],
@@ -215,10 +218,14 @@ module.exports = function (grunt) {
       grunt.config('jshint.main.src', filepath);
       tasksToRun.push('jshint');
 
-      //find the appropriate unit test for the changed file
-      var spec = filepath;
+      //find the appropriate unit test and html file for the changed file
+      var spec, html;
       if (filepath.lastIndexOf('-spec.js') === -1 || filepath.lastIndexOf('-spec.js') !== filepath.length - 8) {
         spec = filepath.substring(0,filepath.length - 3) + '-spec.js';
+        html = filepath.substring(0,filepath.length - 3) + '.html';
+      } else {
+        spec = filepath;
+        html = filepath.substring(0, filepath.length - 8) + '.html';
       }
 
       //if the spec exists then lets run it
@@ -226,6 +233,11 @@ module.exports = function (grunt) {
         var files = [].concat(grunt.config('dom_munger.data.appjs'));
         files.push('bower_components/angular-mocks/angular-mocks.js');
         files.push(spec);
+
+      //if the html exists then push to files
+        if (grunt.file.exists(html)) {
+          files.push(html);
+        }
         grunt.config('karma.options.files', files);
         tasksToRun.push('karma:during_watch');
       }
